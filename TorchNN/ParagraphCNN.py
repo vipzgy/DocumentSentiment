@@ -4,9 +4,9 @@ import torch.nn as nn
 from .CNN import CNN
 
 
-class MyPara(nn.Module):
+class MyParaCNN(nn.Module):
     def __init__(self, config, embed_size, embed_dim, padding_idx, label_size, embedding=None):
-        super(MyPara, self).__init__()
+        super(MyParaCNN, self).__init__()
         self.config = config
         self.embedding = nn.Embedding(embed_size, embed_dim, padding_idx=padding_idx)
         if embedding is not None:
@@ -15,10 +15,10 @@ class MyPara(nn.Module):
 
         self.conv = CNN(config.in_channels, config.out_channels, embed_dim, config.kernel_sizes)
 
-        self.lstm = nn.LSTM(config.out_channels, config.hidden_size, num_layers=config.num_layers,
-                            dropout=config.dropout_rnn, bidirectional=True)
+        self.lstm = nn.LSTM(config.out_channels, config.p_hidden_size, num_layers=config.p_num_layers,
+                            dropout=config.p_dropout_rnn, bidirectional=True)
 
-        self.output_linear = nn.Linear(config.hidden_size * 2, label_size)
+        self.output_linear = nn.Linear(config.p_hidden_size * 2, label_size)
 
     def forward(self, inputs, inputs_lengths):
         all_x = []

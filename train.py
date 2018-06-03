@@ -79,8 +79,16 @@ if __name__ == '__main__':
         embedding = read_pkl(config.embedding_pkl)
 
     # model
-    model = MyPara(config, word_voc.size, embedding[1] if embedding else config.embed_dim,
-                   PAD, p_label_voc.size, embedding[0] if embedding else None)
+    model = None
+    if config.which_model == 'para_cnn':
+        model = MyParaCNN(config, word_voc.size, embedding[1] if embedding else config.embedding_dim,
+                          PAD, p_label_voc.size, embedding[0] if embedding else None)
+    elif config.which_model == 'para_lstm':
+        model = MyParaLSTM(config, word_voc.size, embedding[1] if embedding else config.embedding_dim,
+                           PAD, p_label_voc.size, embedding[0] if embedding else None)
+    else:
+        print('please choose right model')
+        exit()
 
     if config.use_cuda:
         torch.backends.cudnn.enabled = True

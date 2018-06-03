@@ -1,4 +1,5 @@
 from .CNN import CNN
-from .Paragraph import MyPara
+from .ParagraphCNN import MyParaCNN
+from .ParagraphLSTM import MyParaLSTM
 
-__all__ = ['MyPara', 'CNN']
+__all__ = ['MyParaCNN', 'MyParaLSTM']

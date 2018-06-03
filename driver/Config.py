@@ -124,28 +124,40 @@ class Configurable(object):
 
 # Network
     @property
-    def embed_dim(self):
-        return self._config.getint('Network', 'embed_dim')
-
-    @property
-    def num_layers(self):
-        return self._config.getint('Network', 'num_layers')
-
-    @property
-    def hidden_size(self):
-        return self._config.getint('Network', 'hidden_size')
-
-    @property
-    def attention_size(self):
-        return self._config.getint('Network', 'attention_size')
+    def embedding_dim(self):
+        return self._config.getint('Network', 'embedding_dim')
 
     @property
     def dropout_embed(self):
         return self._config.getfloat('Network', 'dropout_embed')
 
     @property
-    def dropout_rnn(self):
-        return self._config.getfloat('Network', 'dropout_rnn')
+    def p_num_layers(self):
+        return self._config.getint('Network', 'p_num_layers')
+
+    @property
+    def p_hidden_size(self):
+        return self._config.getint('Network', 'p_hidden_size')
+
+    @property
+    def p_dropout_rnn(self):
+        return self._config.getfloat('Network', 'p_dropout_rnn')
+
+    @property
+    def s_num_layers(self):
+        return self._config.getint('Network', 's_num_layers')
+
+    @property
+    def s_hidden_size(self):
+        return self._config.getint('Network', 's_hidden_size')
+
+    @property
+    def s_dropout_rnn(self):
+        return self._config.getfloat('Network', 's_dropout_rnn')
+
+    @property
+    def attention_size(self):
+        return self._config.getint('Network', 'attention_size')
 
     @property
     def in_channels(self):
