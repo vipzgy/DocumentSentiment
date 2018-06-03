@@ -38,12 +38,12 @@ class Target(object):
 if __name__ == '__main__':
     # random
     torch.manual_seed(666)
-    torch.cuda.manual_seed(666)
     random.seed(666)
     numpy.random.seed(666)
 
-    # gpu
     gpu = torch.cuda.is_available()
+    if gpu:
+        torch.cuda.manual_seed(666)
     print("GPU available: ", gpu)
     print("CuDNN: ", torch.backends.cudnn.enabled)
 
@@ -64,36 +64,28 @@ if __name__ == '__main__':
     # load data
     train_data = read_pkl(config.train_pkl)
     dev_data = None
-    if config.dev_file:
+    if config.para_dev_file:
         dev_data = read_pkl(config.dev_pkl)
     test_data = read_pkl(config.test_pkl)
 
-    feature_list = read_pkl(config.load_feature_voc)
-    label_list = read_pkl(config.load_label_voc)
-    feature_vec = VocabSrc(feature_list)
-    label_vec = VocabTgt(label_list)
+    word_list = read_pkl(config.load_feature_voc)
+    p_label_list, s_label_list = read_pkl(config.load_label_voc)
+    word_voc = VocabSrc(word_list)
+    p_label_voc = VocabTgt(p_label_list)
+    s_label_voc = VocabTgt(s_label_list)
 
     embedding = None
     if os.path.isfile(config.embedding_pkl):
         embedding = read_pkl(config.embedding_pkl)
 
     # model
-    # if config.which_model == 'Vanilla':
-    #     model = Vanilla(config, feature_vec.size, embedding[1] if embedding else config.embed_dim,
-    #                     PAD, label_vec.size, embedding[0] if embedding else None)
-    # elif config.which_model == 'Contextualized':
-    #     model = Contextualized(config, feature_vec.size, embedding[1] if embedding else config.embed_dim,
-    #                            PAD, label_vec.size, embedding[0] if embedding else None)
-    # elif config.which_model == 'ContextualizedGates':
-    #     model = ContextualizedGates(config, feature_vec.size, embedding[1] if embedding else config.embed_dim,
-    #                                 PAD, label_vec.size, embedding[0] if embedding else None)
-    # else:
-    #     print('please choose right model')
-    #     exit()
-    # if config.use_cuda:
-    #     torch.backends.cudnn.enabled = True
-    #     model = model.cuda()
-    #
-    # # train
-    # train(model, train_data, dev_data, test_data, feature_vec, label_vec, config)
+    model = MyPara(config, word_voc.size, embedding[1] if embedding else config.embed_dim,
+                   PAD, p_label_voc.size, embedding[0] if embedding else None)
+
+    if config.use_cuda:
+        torch.backends.cudnn.enabled = True
+        model = model.cuda()
+
+    # train
+    train(model, train_data, dev_data, test_data, word_voc, p_label_voc, s_label_voc, config)
 

@@ -2,13 +2,14 @@
 import os
 import time
 import torch
+import random
 import numpy as np
 import torch.optim as optim
 import torch.nn.functional as F
 from driver.DataLoader import create_batch_iter, pair_data_variable, pair_data_variable_predict
 
 
-def train(model, train_data, dev_data, test_data, vocab_srcs, vocab_tgts, config):
+def train(model, train_data, dev_data, test_data, vocab_srcs, vocab_para, vocab_s, config):
     # optimizer
     parameters = filter(lambda p: p.requires_grad, model.parameters())
     if config.learning_algorithm == 'sgd':
@@ -28,14 +29,17 @@ def train(model, train_data, dev_data, test_data, vocab_srcs, vocab_tgts, config
         iter_start_time = time.time()
         print('Iteration: ' + str(iter))
 
-        batch_num = int(np.ceil(len(train_data) / float(config.batch_size)))
-        batch_iter = 0
-        for batch in create_batch_iter(train_data, config.batch_size, shuffle=True):
+        # batch_num = int(np.ceil(len(train_data) / float(config.batch_size)))
+        random.shuffle(train_data)
+        for idx, data in enumerate(train_data):
+            if len(data.sentences) == 0:
+                continue
             start_time = time.time()
-            feature, target, starts, ends, feature_lengths = pair_data_variable(batch, vocab_srcs, vocab_tgts, config)
+            feature, target, feature_lengths = pair_data_variable(data, vocab_srcs, vocab_para, config)
+
             model.train()
             optimizer.zero_grad()
-            logit = model(feature, feature_lengths, starts, ends)
+            logit = model(feature, feature_lengths)
             loss = F.cross_entropy(logit, target)
             loss_value = loss.data.cpu().numpy()
             loss.backward()
@@ -43,21 +47,20 @@ def train(model, train_data, dev_data, test_data, vocab_srcs, vocab_tgts, config
             optimizer.step()
 
             correct = (torch.max(logit, 1)[1].view(target.size()).data == target.data).sum()
-            accuracy = 100.0 * correct / len(batch)
+            accuracy = 100.0 * correct
 
             during_time = float(time.time() - start_time)
-            print("Step:{}, Iter:{}, batch:{}, accuracy:{:.4f}({}/{}), time:{:.2f}, loss:{:.6f}"
-                  .format(global_step, iter, batch_iter, accuracy, correct, len(batch), during_time, loss_value[0]))
+            print("Step:{}, Iter:{}, batch:{}, accuracy:{:.4f}, time:{:.2f}, loss:{:.6f}"
+                  .format(global_step, iter, idx + 1, accuracy, during_time, loss_value[0]))
 
-            batch_iter += 1
             global_step += 1
 
-            if batch_iter % config.test_interval == 0 or batch_iter == batch_num:
-                if config.dev_file:
-                    dev_acc, dev_macro = evaluate(model, dev_data, global_step, vocab_srcs, vocab_tgts, config)
-                if config.test_file:
-                    test_acc, test_macro = evaluate(model, test_data, global_step, vocab_srcs, vocab_tgts, config)
-                if config.dev_file:
+            if (idx + 1) % config.test_interval == 0 or (idx + 1) == len(train_data):
+                if config.para_dev_file:
+                    dev_acc, dev_macro = evaluate(model, dev_data, global_step, vocab_srcs, vocab_para, config)
+                if config.para_test_file:
+                    test_acc, test_macro = evaluate(model, test_data, global_step, vocab_srcs, vocab_para, config)
+                if config.para_dev_file:
                     if dev_acc > best_macro:
                         print("Exceed best acc: history = %.2f, current = %.2f" % (best_acc, dev_acc))
                         best_acc = dev_acc
@@ -83,7 +86,7 @@ def train(model, train_data, dev_data, test_data, vocab_srcs, vocab_tgts, config
         print('one iter using time: time:{:.2f}'.format(during_time))
 
 
-def evaluate(model, data, step, vocab_srcs, vocab_tgts, config):
+def evaluate(model, test_data, step, vocab_srcs, vocab_tgts, config):
     model.eval()
     start_time = time.time()
     corrects, size = 0, 0
@@ -93,13 +96,14 @@ def evaluate(model, data, step, vocab_srcs, vocab_tgts, config):
     for i in vocab_tgts.i2w:
         macro_averaging[i] = {'tp': 0, 'fn': 0, 'fp': 0}
 
-    for batch in create_batch_iter(data, config.batch_size):
-        feature, target, starts, ends, feature_lengths = pair_data_variable(batch,
-                                    vocab_srcs, vocab_tgts, config)
-        logit = model(feature, feature_lengths, starts, ends)
+    for idx, data in enumerate(test_data):
+        if len(data.sentences) == 0:
+            continue
+        feature, target, feature_lengths = pair_data_variable(data, vocab_srcs, vocab_tgts, config)
+        logit = model(feature, feature_lengths)
         correct = (torch.max(logit, 1)[1].view(target.size()).data == target.data).sum()
         corrects += correct
-        size += len(batch)
+        size += 1
 
         # 统计宏平均
         gold = target.data

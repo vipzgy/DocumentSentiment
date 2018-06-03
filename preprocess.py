@@ -9,7 +9,7 @@ from driver.Config import Configurable
 from driver.Vocab import VocabSrc, VocabTgt
 
 
-def analysis(sentence_length, word_dict=None, para_label_dict=None, s_label_dict=None):
+def analysis(data, sentence_length, word_dict=None, para_label_dict=None, s_label_dict=None):
 
     if word_dict is not None:
         print('单词个数为: ', len(word_dict))
@@ -23,6 +23,16 @@ def analysis(sentence_length, word_dict=None, para_label_dict=None, s_label_dict
         print('标签有: ')
         for k in s_label_dict.keys():
             print("标签为：{0}， 个数为：{1}".format(k, s_label_dict[k]))
+
+    # 每段包含几句话
+    print("每段中包含的句子数")
+    max_sentence_number = -1
+    for idx, d in enumerate(data):
+        if len(d.sentences) > max_sentence_number:
+            max_sentence_number = len(d.sentences)
+        print(str(idx), str(len(d.sentences)))
+    print("最大个数为：", str(max_sentence_number))
+
     sentence_length = sorted(sentence_length.items(), key=lambda item: item[0], reverse=False)
     # sentence_length = sentence_length.most_common()
     count = 0
@@ -50,15 +60,15 @@ if __name__ == '__main__':
     print('\n')
     train_data, train_sentence_len, word_dict, para_label_dict, s_label_dict = read_doc(
         config.para_train_file, config.sen_train_file, config.max_length, is_train=True)
-    analysis(train_sentence_len, word_dict, para_label_dict, s_label_dict)
+    analysis(train_data, train_sentence_len, word_dict, para_label_dict, s_label_dict)
     # some corpus do not have dev data set
     if config.para_dev_file:
         print('\n')
         dev_data, dev_sentence_len = read_doc(config.para_dev_file, config.sen_dev_file, config.max_length)
-        analysis(dev_sentence_len)
+        analysis(dev_data, dev_sentence_len)
     print('\n')
     test_data, test_sentence_len = read_doc(config.para_test_file, config.sen_test_file, config.max_length)
-    analysis(test_sentence_len)
+    analysis(test_data, test_sentence_len)
 
     if not os.path.isdir(config.save_dir):
         os.mkdir(config.save_dir)

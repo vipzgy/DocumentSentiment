@@ -148,6 +148,18 @@ class Configurable(object):
         return self._config.getfloat('Network', 'dropout_rnn')
 
     @property
+    def in_channels(self):
+        return self._config.getint('Network', 'in_channels')
+
+    @property
+    def out_channels(self):
+        return self._config.getint('Network', 'out_channels')
+
+    @property
+    def kernel_sizes(self):
+        return self._config.get('Network', 'kernel_sizes')
+
+    @property
     def max_norm(self):
         return self._config.getfloat('Network', 'max_norm')
 

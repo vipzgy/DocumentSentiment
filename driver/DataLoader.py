@@ -20,35 +20,53 @@ def create_batch_iter(data, batch_size, shuffle=False):
             count = 0
     if count != 0:
         batched_data.append(instances)
-    for batch in batched_data:
-        yield batch
+    return batched_data
 
 
-def pair_data_variable(batch, vocab_srcs, vocab_tgts, config):
-    batch_size = len(batch)
-    batch = sorted(batch, key=lambda b: len(b[0]), reverse=True)
-    src_lengths = [len(batch[i][0]) for i in range(batch_size)]
-    max_src_length = int(src_lengths[0])
+def pair_data_variable(data, vocab_srcs, vocab_tgts, config):
+    sentences_batchs = create_batch_iter(data.sentences, config.batch_size, shuffle=True)
 
-    src_words = Variable(torch.LongTensor(max_src_length, batch_size).zero_(), requires_grad=False)
-    tgt_words = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
+    srcs = []
+    para_tgt = data.sentiment
+    # tgts = []
+    # starts = []
+    # ends = []
+    src_lens = []
 
-    start = []
-    end = []
+    para_words = Variable(torch.LongTensor(1).zero_())
+    para_words.data[0] = vocab_tgts.word2id(para_tgt)
 
-    for idx, instance in enumerate(batch):
-        sentence = vocab_srcs.word2id(instance[0])
-        for index, word in enumerate(sentence):
-            src_words.data[index][idx] = word
-        tgt_words.data[idx] = vocab_tgts.word2id(instance[3])
-        start.append(instance[1])
-        end.append(instance[2])
+    for batch in sentences_batchs:
+        batch_size = len(batch)
+        batch = sorted(batch, key=lambda b: len(b.words), reverse=True)
+        src_lengths = [len(batch[i].words) for i in range(batch_size)]
+        max_src_length = int(src_lengths[0])
 
-    if config.use_cuda:
-        src_words = src_words.cuda()
-        tgt_words = tgt_words.cuda()
+        src_words = Variable(torch.LongTensor(max_src_length, batch_size).zero_(), requires_grad=False)
+        # tgt_words = Variable(torch.LongTensor(batch_size).zero_(), requires_grad=False)
 
-    return src_words, tgt_words, start, end, src_lengths
+        # start = []
+        # end = []
+
+        for idx, instance in enumerate(batch):
+            sentence = vocab_srcs.word2id(instance.words)
+            for index, word in enumerate(sentence):
+                src_words.data[index][idx] = word
+            # tgt_words.data[idx] = vocab_tgts.word2id(instance[3])
+            # start.append(instance[1])
+            # end.append(instance[2])
+
+        if config.use_cuda:
+            src_words = src_words.cuda()
+            # tgt_words = tgt_words.cuda()
+        srcs.append(src_words)
+        # tgts.append(tgt_words)
+        # starts.append(start)
+        # ends.append(end)
+        src_lens.append(src_lengths)
+
+    # return srcs, tgts, starts, ends, src_lens
+    return srcs, para_words, src_lens
 
 
 def pair_data_variable_predict(data, vocab_srcs, config):
