@@ -80,12 +80,16 @@ if __name__ == '__main__':
 
     # model
     model = None
-    if config.which_model == 'para_cnn':
+    if config.which_model == 'MyParaCNN':
         model = MyParaCNN(config, word_voc.size, embedding[1] if embedding else config.embedding_dim,
                           PAD, p_label_voc.size, embedding[0] if embedding else None)
-    elif config.which_model == 'para_lstm':
+    elif config.which_model == 'MyParaLSTM':
         model = MyParaLSTM(config, word_voc.size, embedding[1] if embedding else config.embedding_dim,
                            PAD, p_label_voc.size, embedding[0] if embedding else None)
+    elif config.which_model == 'HierarchicalAttentionLSTM':
+        model = HierarchicalAttentionLSTM(config, word_voc.size,
+                                          embedding[1] if embedding else config.embedding_dim,
+                                          PAD, p_label_voc.size, embedding[0] if embedding else None)
     else:
         print('please choose right model')
         exit()

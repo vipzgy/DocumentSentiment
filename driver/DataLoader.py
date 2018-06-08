@@ -59,6 +59,7 @@ def pair_data_variable(data, vocab_srcs, vocab_tgts, config):
         if config.use_cuda:
             src_words = src_words.cuda()
             # tgt_words = tgt_words.cuda()
+            para_words = para_words.cuda()
         srcs.append(src_words)
         # tgts.append(tgt_words)
         # starts.append(start)
