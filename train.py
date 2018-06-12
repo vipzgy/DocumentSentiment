@@ -11,28 +11,40 @@ from driver.Vocab import PAD, VocabSrc, VocabTgt
 from driver.Train import train
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-os.environ["OMP_NUM_THREADS"] = "1"
+# os.environ["OMP_NUM_THREADS"] = "1"
 
 
-class Paragraph(object):
-    def __init__(self):
+class Paragraph:
+    """
+        存储句子,一个句子可能有很多个实体
+
+        Parameters:
+            self.sentences: list 存储所有的句子
+            self.sentiment: int存储段落的情感
+
+        """
+    def __init__(self, sentiment):
         self.sentences = []
-        # paragraph sentiment
-        self.sentiment = None
+        self.sentiment = sentiment
+        # self.predict_sentiment = None
 
 
-class Sentence(object):
-    def __init__(self):
-        self.words = []
-        self.targets = []
+class Sentence:
+    """
+        存储句子,一个句子可能有很多个实体
 
+        Parameters:
+            self.words: list
+            self.starts: list
+            self.ends: list
+            self.labels: list
 
-class Target(object):
-    def __init__(self):
-        self.start = -1
-        self.end = -1
-        # target sentiment
-        self.sentiment = None
+    """
+    def __init__(self, words, starts, ends, labels):
+        self.words = words
+        self.starts = starts
+        self.ends = ends
+        self.labels = labels
 
 
 if __name__ == '__main__':
@@ -51,7 +63,7 @@ if __name__ == '__main__':
     parse = argparse.ArgumentParser('Attention Target Classifier')
     parse.add_argument('--config_file', type=str, default='default.ini')
     parse.add_argument('--thread', type=int, default=1)
-    parse.add_argument('--use_cuda', action='store_true', default=True)
+    parse.add_argument('--use_cuda', action='store_true', default=False)
     args, extra_args = parse.parse_known_args()
 
     config = Configurable(args.config_file, extra_args)
