@@ -10,6 +10,8 @@ class CNN(nn.Module):
 
         Ks = [int(i) for i in kernel_size.split(',')]
         self.convs = [nn.Conv2d(in_channel, out_channel, (k, embed_dim)) for k in Ks]
+        for conv in self.convs:
+            conv = conv.cuda()
 
     def forward(self, x):
         x = torch.unsqueeze(x, 1)
